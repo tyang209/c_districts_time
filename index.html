@@ -11,18 +11,43 @@
 		<script type ="text/javascript">
 			var w = 960;
 			var h =1160;
+			var scale = 1000;
 
 			var svg = d3.select("body").append("svg")
 						.attr("width",w)
 						.attr("height",h);
+			var projection = d3.geo.albersUsa()
+				//.translate([w/2],[h/2])
+				//.center()
+				.scale([1000]);
 
 
+			var path = d3.geo.path()
+						 .projection(projection);
 
+		
 			d3.json("Massachusetts_108_to_112.geojson", function(error, mass) {
 
-				console.log(mass)
-				//svg.append("path")
-					//.datum(topojson.feature)
+				var center = d3.geo.centroid(mass);
+
+				var bounds  = path.bounds(mass);
+				var hscale  = scale*w  / (bounds[1][0] - bounds[0][0]);
+				var vscale  = scale*h / (bounds[1][1] - bounds[0][1]);
+				var scale   = (hscale < vscale) ? hscale : vscale;
+				var offset  = [w - (bounds[0][0] + bounds[1][0])/2,
+				            h - (bounds[0][1] + bounds[1][1])/2];
+
+	            projection = d3.geo.albersUsa().
+	            				scale(scale).translate(offset);
+	            path = path.projection(projection);
+
+
+				svg.selectAll("path")
+					.data(mass.features)
+					.enter()
+					.append("path")
+					.attr("d",path);
+
 
 
 			});
